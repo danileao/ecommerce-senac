@@ -16,8 +16,29 @@ function Cadastro() {
   const [products, setProducts] = useState([]);
   const [messageError, setMessageError] = useState(null);
 
+  const handleKeyUp = useCallback((e) => {
+    if (e) {
+      console.log("keyup", e.target.value);
+      let value;
+      value = e.target.value;
+      // \D => Tudo o que não for numerico
+      // g => Procurar em todo conteudo, mesmo que ache, continue!
+      // \b
+      value = value.replace(/\D/g, "");
+      value = value.replace(/(\d)(\d{2})$/, "$1,$2");
+      // 1.333.999,00
+      value = value.replace(/(?=(\d{3})+(\D))\B/g, ".");
+      e.target.value = value;
+      // setProduct({
+      //   ...product,
+      //   price: value,
+      // });
+    }
+  }, []);
+
   const handleChange = useCallback(
     (e) => {
+      console.log("change", e.target.value);
       setProduct({
         ...product,
         [e.target.name]: e.target.value,
@@ -53,16 +74,22 @@ function Cadastro() {
     products,
   ]);
 
-  const handleSubmit = useCallback((e) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(
+    (e) => {
+      e.preventDefault();
 
-    if (!validation()) {
-      return;
-    }
+      if (!validation()) {
+        return;
+      }
 
-    setProducts([...products, product]);
-    console.log(products);
-  });
+      const prods = [...products, product];
+      setProducts(prods);
+
+      localStorage.setItem("produtos", JSON.stringify(prods));
+      console.log(products);
+    },
+    [product, products, validation]
+  );
 
   return (
     <Container>
@@ -91,11 +118,12 @@ function Cadastro() {
         ></Textarea>
         <Input
           placeholder="Preço de Venda"
-          onChange={handleChange}
+          // onKeyUp={handleKeyUp}
+          onChange={(e) => {
+            handleKeyUp(e);
+            handleChange(e);
+          }}
           name="price"
-          type="number"
-          min="0"
-          step="0.01"
           value={product.price}
         />
         <Input
